@@ -2,10 +2,32 @@
 
 import re
 import time
+from datetime import datetime
 
 import psutil
 
 from mcp_memory.models import ProcessInfo
+
+
+def _format_age(hours: float) -> str:
+    """Format age in hours to human-readable string."""
+    if hours < 1:
+        minutes = int(hours * 60)
+        return f"{minutes}m"
+    elif hours < 24:
+        h = int(hours)
+        m = int((hours - h) * 60)
+        return f"{h}h {m}m" if m > 0 else f"{h}h"
+    else:
+        days = int(hours / 24)
+        remaining_hours = int(hours % 24)
+        return f"{days}d {remaining_hours}h" if remaining_hours > 0 else f"{days}d"
+
+
+def _format_timestamp(ts: float) -> str:
+    """Format Unix timestamp to human-readable string."""
+    dt = datetime.fromtimestamp(ts)
+    return dt.strftime("%b %d %H:%M")
 
 
 def _get_process_info(proc: psutil.Process) -> ProcessInfo | None:
@@ -27,6 +49,8 @@ def _get_process_info(proc: psutil.Process) -> ProcessInfo | None:
                 status=proc.status(),
                 create_time=create_time,
                 age_hours=round(age_hours, 2),
+                age_formatted=_format_age(age_hours),
+                started_at=_format_timestamp(create_time),
                 cmdline=cmdline_str,
             )
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):

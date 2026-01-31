@@ -27,6 +27,8 @@ class ProcessInfo(BaseModel):
     status: str = Field(description="Process status")
     create_time: float = Field(description="Process creation time (Unix timestamp)")
     age_hours: float = Field(description="Process age in hours")
+    age_formatted: str = Field(description="Human-readable age (e.g., '2h 30m')")
+    started_at: str = Field(description="Human-readable start time (e.g., 'Jan 30 14:23')")
     cmdline: str = Field(description="Command line (truncated)")
 
 
