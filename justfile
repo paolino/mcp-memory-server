@@ -66,5 +66,17 @@ CI:
 clean:
     #!/usr/bin/env bash
     set -euo pipefail
-    rm -rf dist build *.egg-info result .pytest_cache
+    rm -rf dist build *.egg-info result .pytest_cache site
     find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+
+# Serve docs locally
+docs-serve:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdocs serve
+
+# Build docs
+docs-build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdocs build

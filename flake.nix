@@ -88,6 +88,8 @@
             pythonPkgs.pytest-asyncio
             pythonPkgs.psutil
             pythonPkgs.pydantic
+            pythonPkgs.mkdocs
+            pythonPkgs.mkdocs-material
             pkgs.just
           ];
 
