@@ -1,6 +1,10 @@
 # MCP Memory Server
 
+[![CI](https://github.com/paolino/mcp-memory-server/actions/workflows/CI.yaml/badge.svg)](https://github.com/paolino/mcp-memory-server/actions/workflows/CI.yaml)
+
 MCP server for memory management with process inspection and cleanup tools.
+
+**[Documentation](https://paolino.github.io/mcp-memory-server/)**
 
 ## Tools
 
