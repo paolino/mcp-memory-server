@@ -32,6 +32,16 @@ class ProcessInfo(BaseModel):
     cmdline: str = Field(description="Command line (truncated)")
 
 
+class ProcessGroup(BaseModel):
+    """Aggregated information for processes with the same name."""
+
+    name: str = Field(description="Process name")
+    count: int = Field(description="Number of instances")
+    total_memory_mb: float = Field(description="Total memory usage in MB")
+    total_memory_percent: float = Field(description="Total memory usage percentage")
+    pids: list[int] = Field(description="List of process IDs")
+
+
 class KillResult(BaseModel):
     """Result of attempting to kill a single process."""
 
