@@ -13,6 +13,10 @@ class MemoryInfo(BaseModel):
     swap_total_gb: float = Field(description="Total swap in GB")
     swap_used_gb: float = Field(description="Used swap in GB")
     swap_percent: float = Field(description="Swap usage percentage")
+    warnings: list[str] = Field(
+        default_factory=list,
+        description="Health warnings (high memory, swap usage, etc.)",
+    )
 
 
 class ProcessInfo(BaseModel):

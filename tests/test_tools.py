@@ -6,7 +6,7 @@ import pytest
 
 from mcp_memory.models import KillSummary, MemoryInfo, ProcessGroup, ProcessInfo
 from mcp_memory.tools.kill import kill_processes
-from mcp_memory.tools.memory import list_memory_usage
+from mcp_memory.tools.memory import _generate_warnings, list_memory_usage
 from mcp_memory.tools.processes import (
     find_stale_processes,
     list_process_groups,
@@ -32,6 +32,53 @@ class TestListMemoryUsage:
     def test_available_less_than_total(self) -> None:
         result = list_memory_usage()
         assert result.available_gb <= result.total_gb
+
+    def test_has_warnings_field(self) -> None:
+        result = list_memory_usage()
+        assert isinstance(result.warnings, list)
+
+
+class TestGenerateWarnings:
+    """Tests for warning generation."""
+
+    def test_no_warnings_for_low_usage(self) -> None:
+        warnings = _generate_warnings(mem_percent=50.0, swap_percent=10.0)
+        assert warnings == []
+
+    def test_warning_for_high_memory(self) -> None:
+        warnings = _generate_warnings(mem_percent=85.0, swap_percent=0.0)
+        assert len(warnings) == 1
+        assert "High memory" in warnings[0]
+
+    def test_critical_for_very_high_memory(self) -> None:
+        warnings = _generate_warnings(mem_percent=96.0, swap_percent=0.0)
+        assert len(warnings) == 1
+        assert "CRITICAL" in warnings[0]
+
+    def test_warning_for_high_swap(self) -> None:
+        warnings = _generate_warnings(mem_percent=50.0, swap_percent=60.0)
+        assert len(warnings) == 1
+        assert "swap" in warnings[0].lower()
+
+    def test_multiple_warnings(self) -> None:
+        warnings = _generate_warnings(mem_percent=85.0, swap_percent=60.0)
+        assert len(warnings) == 2
+
+    def test_threshold_boundary_memory(self) -> None:
+        # Just below threshold - no warning
+        warnings = _generate_warnings(mem_percent=79.9, swap_percent=0.0)
+        assert warnings == []
+        # At threshold - warning
+        warnings = _generate_warnings(mem_percent=80.0, swap_percent=0.0)
+        assert len(warnings) == 1
+
+    def test_threshold_boundary_swap(self) -> None:
+        # Just below threshold - no warning
+        warnings = _generate_warnings(mem_percent=0.0, swap_percent=49.9)
+        assert warnings == []
+        # At threshold - warning
+        warnings = _generate_warnings(mem_percent=0.0, swap_percent=50.0)
+        assert len(warnings) == 1
 
 
 class TestListTopProcesses:
