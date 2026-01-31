@@ -6,7 +6,7 @@ from datetime import datetime
 
 import psutil
 
-from mcp_memory.models import ProcessInfo
+from mcp_memory.models import ProcessGroup, ProcessInfo
 
 
 def _format_age(hours: float) -> str:
@@ -142,3 +142,53 @@ def find_stale_processes(
     # Sort by memory usage descending
     matches.sort(key=lambda p: p.memory_mb, reverse=True)
     return matches
+
+
+def list_process_groups(
+    n: int = 10,
+    min_count: int = 1,
+) -> list[ProcessGroup]:
+    """
+    List processes grouped by name with aggregated stats.
+
+    Args:
+        n: Number of groups to return (default 10, max 50)
+        min_count: Minimum number of instances to include (default 1)
+
+    Returns:
+        List of ProcessGroup sorted by total memory usage descending
+    """
+    n = min(max(1, n), 50)
+    min_count = max(1, min_count)
+
+    groups: dict[str, dict] = {}
+    for proc in psutil.process_iter():
+        info = _get_process_info(proc)
+        if info is None:
+            continue
+
+        name = info.name
+        if name not in groups:
+            groups[name] = {
+                "pids": [],
+                "total_memory_mb": 0.0,
+                "total_memory_percent": 0.0,
+            }
+        groups[name]["pids"].append(info.pid)
+        groups[name]["total_memory_mb"] += info.memory_mb
+        groups[name]["total_memory_percent"] += info.memory_percent
+
+    result = [
+        ProcessGroup(
+            name=name,
+            count=len(data["pids"]),
+            total_memory_mb=round(data["total_memory_mb"], 2),
+            total_memory_percent=round(data["total_memory_percent"], 2),
+            pids=data["pids"],
+        )
+        for name, data in groups.items()
+        if len(data["pids"]) >= min_count
+    ]
+
+    result.sort(key=lambda g: g.total_memory_mb, reverse=True)
+    return result[:n]

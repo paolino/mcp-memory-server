@@ -4,10 +4,14 @@ import os
 
 import pytest
 
-from mcp_memory.models import KillSummary, MemoryInfo, ProcessInfo
+from mcp_memory.models import KillSummary, MemoryInfo, ProcessGroup, ProcessInfo
 from mcp_memory.tools.kill import kill_processes
 from mcp_memory.tools.memory import list_memory_usage
-from mcp_memory.tools.processes import find_stale_processes, list_top_processes
+from mcp_memory.tools.processes import (
+    find_stale_processes,
+    list_process_groups,
+    list_top_processes,
+)
 
 
 class TestListMemoryUsage:
@@ -60,6 +64,53 @@ class TestListTopProcesses:
         result = list_top_processes(n=10, sort_by="cpu")
         for i in range(len(result) - 1):
             assert result[i].cpu_percent >= result[i + 1].cpu_percent
+
+
+class TestListProcessGroups:
+    """Tests for list_process_groups."""
+
+    def test_returns_list(self) -> None:
+        result = list_process_groups(n=5)
+        assert isinstance(result, list)
+        assert len(result) <= 5
+
+    def test_items_are_process_group(self) -> None:
+        result = list_process_groups(n=5)
+        for item in result:
+            assert isinstance(item, ProcessGroup)
+
+    def test_respects_limit(self) -> None:
+        result = list_process_groups(n=3)
+        assert len(result) <= 3
+
+    def test_clamps_max_to_50(self) -> None:
+        result = list_process_groups(n=100)
+        assert len(result) <= 50
+
+    def test_sorted_by_memory_descending(self) -> None:
+        result = list_process_groups(n=10)
+        for i in range(len(result) - 1):
+            assert result[i].total_memory_mb >= result[i + 1].total_memory_mb
+
+    def test_min_count_filters(self) -> None:
+        result = list_process_groups(n=50, min_count=2)
+        for group in result:
+            assert group.count >= 2
+
+    def test_pids_match_count(self) -> None:
+        result = list_process_groups(n=10)
+        for group in result:
+            assert len(group.pids) == group.count
+
+    def test_has_required_fields(self) -> None:
+        result = list_process_groups(n=1)
+        if result:
+            group = result[0]
+            assert group.name
+            assert group.count >= 1
+            assert group.total_memory_mb >= 0
+            assert group.total_memory_percent >= 0
+            assert isinstance(group.pids, list)
 
 
 class TestFindStaleProcesses:
