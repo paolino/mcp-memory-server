@@ -9,7 +9,43 @@ Add to your MCP configuration:
   "mcpServers": {
     "mcp-memory": {
       "command": "nix",
+      "args": ["run", "github:paolino/mcp-memory-server", "--refresh"]
+    }
+  }
+}
+```
+
+### Updating
+
+The `--refresh` flag ensures Nix fetches the latest version from GitHub on each run. Without it, Nix uses its cached version.
+
+For faster startup (using cached version):
+
+```json
+{
+  "mcpServers": {
+    "mcp-memory": {
+      "command": "nix",
       "args": ["run", "github:paolino/mcp-memory-server"]
+    }
+  }
+}
+```
+
+To manually update the cache, run:
+
+```bash
+nix flake prefetch github:paolino/mcp-memory-server --refresh
+```
+
+To pin a specific version:
+
+```json
+{
+  "mcpServers": {
+    "mcp-memory": {
+      "command": "nix",
+      "args": ["run", "github:paolino/mcp-memory-server/v0.1.0"]
     }
   }
 }

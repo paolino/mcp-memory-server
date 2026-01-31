@@ -26,11 +26,13 @@ Add to `~/.config/claude-code/mcp.json`:
   "mcpServers": {
     "mcp-memory": {
       "command": "nix",
-      "args": ["run", "github:paolino/mcp-memory-server"]
+      "args": ["run", "github:paolino/mcp-memory-server", "--refresh"]
     }
   }
 }
 ```
+
+The `--refresh` flag ensures you always get the latest version. Remove it to use the cached version for faster startup.
 
 ### From source
 
