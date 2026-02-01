@@ -1,0 +1,42 @@
+name: Sync flake version
+
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  sync-version:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=$(gh pr list --repo ${{ github.repository }} --json number,headRefName --jq '[.[] | select(.headRefName | startswith("release-please--"))][0]')
+          if [ -z "$PR" ] || [ "$PR" = "null" ]; then
+            echo "No release-please PR found"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found PR: $PR"
+            echo "number=$(echo $PR | jq -r '.number')" >> "$GITHUB_OUTPUT"
+            echo "branch=$(echo $PR | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.pr.outputs.found == 'true'
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+
+      - name: Sync version to flake.nix
+        if: steps.pr.outputs.found == 'true'
+        run: ./scripts/sync-flake-version.sh
+        env:
+          CI: true
